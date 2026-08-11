@@ -618,7 +618,8 @@
   .hub-item:last-child { border-right: none; }
 
   .hub-item:hover,
-  .hub-item:focus-visible {
+  .hub-item:focus-visible,
+  .hub-item:focus-within {
     background: rgba(27,27,40,0.45);
   }
 
@@ -662,8 +663,10 @@
 
   .hub-item:hover::before,
   .hub-item:focus-visible::before,
+  .hub-item:focus-within::before,
   .hub-item:hover::after,
-  .hub-item:focus-visible::after {
+  .hub-item:focus-visible::after,
+  .hub-item:focus-within::after {
     opacity: 1;
   }
 
@@ -675,7 +678,9 @@
   .icon-wrap,
   .kicker,
   .hub-item h2,
-  .hub-item p {
+  .hub-item p,
+  .hub-item .haiku,
+  .hub-item .choice-input-row {
     opacity: 0;
     transform: translateY(6px);
     transition: opacity 0.55s ease, transform 0.55s ease;
@@ -685,10 +690,20 @@
   .hub-item:hover .kicker,
   .hub-item:hover h2,
   .hub-item:hover p,
+  .hub-item:hover .haiku,
+  .hub-item:hover .choice-input-row,
   .hub-item:focus-visible .icon-wrap,
   .hub-item:focus-visible .kicker,
   .hub-item:focus-visible h2,
-  .hub-item:focus-visible p {
+  .hub-item:focus-visible p,
+  .hub-item:focus-visible .haiku,
+  .hub-item:focus-visible .choice-input-row,
+  .hub-item:focus-within .icon-wrap,
+  .hub-item:focus-within .kicker,
+  .hub-item:focus-within h2,
+  .hub-item:focus-within p,
+  .hub-item:focus-within .haiku,
+  .hub-item:focus-within .choice-input-row {
     opacity: 1;
     transform: translateY(0);
   }
@@ -716,24 +731,28 @@
   .hub-item.manual .icon-ring { border-color: rgba(225,58,65,0.18); }
 
   .hub-item:hover .icon-ring,
-  .hub-item:focus-visible .icon-ring {
+  .hub-item:focus-visible .icon-ring,
+  .hub-item:focus-within .icon-ring {
     transform: scale(1.08);
   }
 
   .hub-item.sanctuary:hover .icon-ring,
-  .hub-item.sanctuary:focus-visible .icon-ring {
+  .hub-item.sanctuary:focus-visible .icon-ring,
+  .hub-item.sanctuary:focus-within .icon-ring {
     border-color: rgba(140,124,240,0.45);
     box-shadow: 0 0 20px rgba(140,124,240,0.12);
   }
 
   .hub-item.play:hover .icon-ring,
-  .hub-item.play:focus-visible .icon-ring {
+  .hub-item.play:focus-visible .icon-ring,
+  .hub-item.play:focus-within .icon-ring {
     border-color: rgba(156,175,136,0.45);
     box-shadow: 0 0 20px rgba(156,175,136,0.12);
   }
 
   .hub-item.manual:hover .icon-ring,
-  .hub-item.manual:focus-visible .icon-ring {
+  .hub-item.manual:focus-visible .icon-ring,
+  .hub-item.manual:focus-within .icon-ring {
     border-color: rgba(225,58,65,0.45);
     box-shadow: 0 0 20px rgba(225,58,65,0.12);
   }
@@ -776,7 +795,8 @@
   }
 
   .hub-item:hover h2,
-  .hub-item:focus-visible h2 {
+  .hub-item:focus-visible h2,
+  .hub-item:focus-within h2 {
     color: var(--text);
   }
 
@@ -824,6 +844,60 @@
   .hub-item:focus-visible .hub-arrow svg {
     transform: translateX(3px);
   }
+
+  /* haiku fill-in-the-blank (Sanctuary) and riddle answer field (Play) —
+     share the same underline-style input so both feel like one system */
+  .hub-item .haiku {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin: 0 0 8px;
+  }
+
+  .haiku-line { display: block; }
+  .haiku-line--input { display: block; margin-top: 4px; }
+
+  .choice-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    width: 100%;
+    padding: 2px 0 5px;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+
+  .choice-input::placeholder { color: var(--text-tertiary); }
+
+  .hub-item.sanctuary .choice-input:focus { border-bottom-color: var(--sanctuary); }
+  .hub-item.play .choice-input:focus { border-bottom-color: var(--play); }
+
+  .choice-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .choice-input-row .choice-input { font-size: 13.5px; }
+
+  .choice-counter {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+    text-align: right;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color 0.3s ease;
+  }
+
+  .choice-counter.is-near-limit { color: var(--manual); }
 
   .page-footer {
     text-align: center;
@@ -1012,26 +1086,35 @@
       </div>
 
       <div class="hub">
-        <a href="#sanctuary" class="hub-item sanctuary" data-accent="sanctuary">
+        <div class="hub-item sanctuary" data-accent="sanctuary">
           <div class="icon-wrap">
             <span class="icon-ring"></span>
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l4.5-9L12 20"/><path d="M12 20l4.5-9L21 20"/><path d="M9.5 20L12 15l2.5 5"/></svg>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h10M4 12h16M4 16.5h10"/></svg>
           </div>
-          <span class="kicker">Rest</span>
-          <h2>The Sanctuary</h2>
-          <p>Finish a line of haiku, in your own words. Forty characters, no more.</p>
-          <span class="hub-arrow">Begin <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
-        </a>
-        <a href="#play" class="hub-item play" data-accent="play">
+          <span class="kicker">Haiku</span>
+          <h2>Interactive Haiku</h2>
+          <div class="haiku">
+            <span class="haiku-line">It all vanishes</span>
+            <span class="haiku-line">When silence greets mystery</span>
+            <span class="haiku-line haiku-line--input">
+              <input type="text" class="choice-input" id="haikuInput" maxlength="40" autocomplete="off" spellcheck="false" placeholder="…" aria-label="Complete the haiku, forty characters or fewer">
+            </span>
+          </div>
+          <span class="choice-counter" id="haikuCounter" aria-hidden="true">40</span>
+        </div>
+        <div class="hub-item play" data-accent="play">
           <div class="icon-wrap">
             <span class="icon-ring"></span>
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="10" rx="4"/><path d="M8 12h.01M8 15h.01M6.5 13.5h3"/><path d="M16 12h.01M18 13h.01"/></svg>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9a3 3 0 115.5 1.7c-1 .9-1.5 1.4-1.5 2.3"/><path d="M12 17h.01"/></svg>
           </div>
-          <span class="kicker">Play</span>
-          <h2>Life at Play</h2>
-          <p>A riddle worth sitting with. The answer waits further down, if you keep going.</p>
-          <span class="hub-arrow">Begin <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg></span>
-        </a>
+          <span class="kicker">Riddle</span>
+          <h2>Can You Solve the Riddle?</h2>
+          <p class="riddle-text">It is faster than the mind, yet it never moves. The senses can never overtake it, because it's already there at the destination before they even start. What is it?</p>
+          <div class="choice-input-row">
+            <input type="text" class="choice-input" id="riddleInput" maxlength="60" autocomplete="off" spellcheck="false" placeholder="Your answer…" aria-label="Your answer to the riddle, sixty characters or fewer">
+            <span class="choice-counter" id="riddleCounter" aria-hidden="true">60</span>
+          </div>
+        </div>
         <a href="#manual" class="hub-item manual" data-accent="manual">
           <div class="icon-wrap">
             <span class="icon-ring"></span>
@@ -1052,7 +1135,7 @@
       <span class="page-footer-dot"></span>
       <span class="page-footer-dot"></span>
     </div>
-    <p class="page-footer-text">Rest · Play · Practice</p>
+    <p class="page-footer-text">Haiku · Riddle · Practice</p>
   </footer>
 </main>
 
@@ -1668,15 +1751,46 @@
       const region = item.dataset.accent;
 
       item.addEventListener('mouseenter', () => { hoveredRegion = region; });
-      item.addEventListener('focus', () => { hoveredRegion = region; });
       item.addEventListener('mouseleave', () => { if (hoveredRegion === region) hoveredRegion = null; });
-      item.addEventListener('blur', () => { if (hoveredRegion === region) hoveredRegion = null; });
+      item.addEventListener('focusin', () => { hoveredRegion = region; });
+      item.addEventListener('focusout', () => { if (hoveredRegion === region) hoveredRegion = null; });
 
-      item.addEventListener('click', (e) => {
-        e.preventDefault();
-        setEngaged(region);
-      });
+      // Manual is still a full-card click target until the art picker
+      // replaces it. Sanctuary and Play no longer navigate anywhere —
+      // they engage through their own input's focus instead — so a
+      // click anywhere on those cards just moves focus into the input.
+      if (item.tagName === 'A') {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          setEngaged(region);
+        });
+      } else {
+        item.addEventListener('click', (e) => {
+          const input = item.querySelector('.choice-input');
+          if (input && e.target !== input) input.focus();
+        });
+      }
     });
+
+    // haiku + riddle inputs — focus/blur drives the same engagedRegion
+    // state that used to come from clicking the card, so the sphere's
+    // vibrate/glow now tracks actually answering, not just opening.
+    function wireChoiceInput(input, region, maxLen, counterEl) {
+      if (!input) return;
+      input.addEventListener('focus', () => { engagedRegion = region; });
+      input.addEventListener('blur', () => { if (engagedRegion === region) engagedRegion = null; });
+      if (counterEl) {
+        const updateCounter = () => {
+          const remaining = maxLen - input.value.length;
+          counterEl.textContent = remaining;
+          counterEl.classList.toggle('is-near-limit', remaining <= 8);
+        };
+        input.addEventListener('input', updateCounter);
+        updateCounter();
+      }
+    }
+    wireChoiceInput(document.getElementById('haikuInput'), 'sanctuary', 40, document.getElementById('haikuCounter'));
+    wireChoiceInput(document.getElementById('riddleInput'), 'play', 60, document.getElementById('riddleCounter'));
 
     function draw(timestamp) {
       requestAnimationFrame(draw);
