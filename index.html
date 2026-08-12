@@ -680,7 +680,8 @@
   .hub-item h2,
   .hub-item p,
   .hub-item .haiku,
-  .hub-item .choice-input-row {
+  .hub-item .choice-input-row,
+  .hub-item .choice-actions {
     opacity: 0;
     transform: translateY(6px);
     transition: opacity 0.55s ease, transform 0.55s ease;
@@ -692,18 +693,21 @@
   .hub-item:hover p,
   .hub-item:hover .haiku,
   .hub-item:hover .choice-input-row,
+  .hub-item:hover .choice-actions,
   .hub-item:focus-visible .icon-wrap,
   .hub-item:focus-visible .kicker,
   .hub-item:focus-visible h2,
   .hub-item:focus-visible p,
   .hub-item:focus-visible .haiku,
   .hub-item:focus-visible .choice-input-row,
+  .hub-item:focus-visible .choice-actions,
   .hub-item:focus-within .icon-wrap,
   .hub-item:focus-within .kicker,
   .hub-item:focus-within h2,
   .hub-item:focus-within p,
   .hub-item:focus-within .haiku,
-  .hub-item:focus-within .choice-input-row {
+  .hub-item:focus-within .choice-input-row,
+  .hub-item:focus-within .choice-actions {
     opacity: 1;
     transform: translateY(0);
   }
@@ -879,11 +883,17 @@
   .choice-input-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
   }
 
   .choice-input-row .choice-input { font-size: 13.5px; }
+
+  .choice-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+  }
 
   .choice-counter {
     display: block;
@@ -891,13 +901,45 @@
     font-size: 10px;
     letter-spacing: 0.5px;
     color: var(--text-tertiary);
-    text-align: right;
     white-space: nowrap;
-    flex-shrink: 0;
     transition: color 0.3s ease;
   }
 
   .choice-counter.is-near-limit { color: var(--manual); }
+
+  .choice-submit {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+  }
+
+  .choice-submit:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .hub-item.sanctuary .choice-submit:hover:not(:disabled) { border-color: var(--sanctuary); color: var(--sanctuary); }
+  .hub-item.play .choice-submit:hover:not(:disabled) { border-color: var(--play); color: var(--play); }
+
+  .choice-submit.is-submitted {
+    border-color: var(--text-tertiary);
+    color: var(--text-tertiary);
+    cursor: default;
+  }
+
+  .hub-item.sanctuary .choice-submit.is-submitted:hover,
+  .hub-item.play .choice-submit.is-submitted:hover {
+    border-color: var(--text-tertiary);
+    color: var(--text-tertiary);
+  }
 
   .page-footer {
     text-align: center;
@@ -1100,7 +1142,10 @@
               <input type="text" class="choice-input" id="haikuInput" maxlength="40" autocomplete="off" spellcheck="false" placeholder="…" aria-label="Complete the haiku, forty characters or fewer">
             </span>
           </div>
-          <span class="choice-counter" id="haikuCounter" aria-hidden="true">40</span>
+          <div class="choice-actions">
+            <span class="choice-counter" id="haikuCounter" aria-hidden="true">40</span>
+            <button type="button" class="choice-submit" id="haikuSubmit" disabled>Submit</button>
+          </div>
         </div>
         <div class="hub-item play" data-accent="play">
           <div class="icon-wrap">
@@ -1112,7 +1157,10 @@
           <p class="riddle-text">It is faster than the mind, yet it never moves. The senses can never overtake it, because it's already there at the destination before they even start. What is it?</p>
           <div class="choice-input-row">
             <input type="text" class="choice-input" id="riddleInput" maxlength="60" autocomplete="off" spellcheck="false" placeholder="Your answer…" aria-label="Your answer to the riddle, sixty characters or fewer">
+          </div>
+          <div class="choice-actions">
             <span class="choice-counter" id="riddleCounter" aria-hidden="true">60</span>
+            <button type="button" class="choice-submit" id="riddleSubmit" disabled>Submit</button>
           </div>
         </div>
         <a href="#manual" class="hub-item manual" data-accent="manual">
@@ -1772,25 +1820,99 @@
       }
     });
 
+    // session id — one per page load, not persisted, so it just threads
+    // together whatever events a single visit produces. Fits the
+    // "threshold" framing: nothing here is meant to outlive the visit.
+    function makeSessionId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'sess-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+    const sessionId = makeSessionId();
+
+    // Infra Lab logging endpoint — placeholder until the API Gateway
+    // route exists. Submissions still work on-page (button state,
+    // engaged glow) even while this points nowhere; the fetch just
+    // fails quietly and nothing on screen depends on it succeeding.
+    const INFRA_LAB_ENDPOINT = 'https://REPLACE-WITH-YOUR-API-ID.execute-api.us-east-2.amazonaws.com/log';
+
+    function logChoiceEvent(eventType, payload) {
+      const body = JSON.stringify({
+        event: eventType,
+        sessionId,
+        timestamp: new Date().toISOString(),
+        ...payload
+      });
+      fetch(INFRA_LAB_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body
+      }).catch(() => {
+        // endpoint not live yet, or visitor is offline — on-page
+        // confirmation already happened, so this stays silent
+      });
+    }
+
     // haiku + riddle inputs — focus/blur drives the same engagedRegion
     // state that used to come from clicking the card, so the sphere's
     // vibrate/glow now tracks actually answering, not just opening.
-    function wireChoiceInput(input, region, maxLen, counterEl) {
-      if (!input) return;
+    // The submit button locks in the value, fires the log event, and
+    // un-locks itself automatically if the visitor edits again.
+    function wireChoiceBox(input, submitBtn, region, maxLen, counterEl, eventType) {
+      if (!input || !submitBtn) return;
+      let submitted = false;
+
       input.addEventListener('focus', () => { engagedRegion = region; });
       input.addEventListener('blur', () => { if (engagedRegion === region) engagedRegion = null; });
-      if (counterEl) {
-        const updateCounter = () => {
-          const remaining = maxLen - input.value.length;
-          counterEl.textContent = remaining;
-          counterEl.classList.toggle('is-near-limit', remaining <= 8);
-        };
-        input.addEventListener('input', updateCounter);
+
+      const updateCounter = () => {
+        if (!counterEl) return;
+        const remaining = maxLen - input.value.length;
+        counterEl.textContent = remaining;
+        counterEl.classList.toggle('is-near-limit', remaining <= 8);
+      };
+
+      input.addEventListener('input', () => {
         updateCounter();
-      }
+        submitBtn.disabled = input.value.trim().length === 0;
+        if (submitted) {
+          submitted = false;
+          submitBtn.textContent = 'Submit';
+          submitBtn.classList.remove('is-submitted');
+        }
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitBtn.click();
+        }
+      });
+
+      submitBtn.addEventListener('click', () => {
+        if (submitted || input.value.trim().length === 0) return;
+        submitted = true;
+        submitBtn.textContent = 'Saved';
+        submitBtn.classList.add('is-submitted');
+        logChoiceEvent(eventType, { value: input.value.trim() });
+      });
+
+      updateCounter();
     }
-    wireChoiceInput(document.getElementById('haikuInput'), 'sanctuary', 40, document.getElementById('haikuCounter'));
-    wireChoiceInput(document.getElementById('riddleInput'), 'play', 60, document.getElementById('riddleCounter'));
+
+    wireChoiceBox(
+      document.getElementById('haikuInput'),
+      document.getElementById('haikuSubmit'),
+      'sanctuary', 40,
+      document.getElementById('haikuCounter'),
+      'haiku_completed'
+    );
+    wireChoiceBox(
+      document.getElementById('riddleInput'),
+      document.getElementById('riddleSubmit'),
+      'play', 60,
+      document.getElementById('riddleCounter'),
+      'riddle_answered'
+    );
 
     function draw(timestamp) {
       requestAnimationFrame(draw);
