@@ -121,12 +121,33 @@
   .orb--manual {
     width: 260px;
     height: 260px;
-    background: rgba(225,58,65,0.11);
     top: 50%;
     left: 50%;
     margin-top: -130px;
     margin-left: -130px;
     animation-delay: -14s;
+  }
+
+  /* the sphere's own glow cycles through all three region colors rather
+     than sitting fixed on one — three stacked layers crossfade on a 30s
+     loop, 10s held per color */
+  .orb-color {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    opacity: 0;
+    animation: orb-color-cycle 30s ease-in-out infinite;
+  }
+
+  .orb-color--sanctuary { background: rgba(140,124,240,0.13); animation-delay: 0s; }
+  .orb-color--play { background: rgba(156,175,136,0.13); animation-delay: -10s; }
+  .orb-color--manual { background: rgba(225,58,65,0.12); animation-delay: -20s; }
+
+  @keyframes orb-color-cycle {
+    0%, 100% { opacity: 0; }
+    3% { opacity: 1; }
+    30% { opacity: 1; }
+    36% { opacity: 0; }
   }
 
   /* orange — lives centered within the hub-sphere section, below the top cluster */
@@ -1026,6 +1047,8 @@
     #glow { display: none; }
     .grain { animation: none; }
     .orb { animation: none; }
+    .orb-color { animation: none; }
+    .orb-color--sanctuary { opacity: 1; }
     .footnote-scratch.revealed .footnote-overlay { transition: none; }
     .hub-arrow { opacity: 1; transform: none; }
 
@@ -1119,7 +1142,11 @@
   <div class="hub-sphere-wrap" id="hubSphereWrap">
     <div class="hub-sphere-sticky">
       <div class="atmosphere-lower" aria-hidden="true">
-        <div class="orb orb--manual"></div>
+        <div class="orb orb--manual">
+        <span class="orb-color orb-color--sanctuary"></span>
+        <span class="orb-color orb-color--play"></span>
+        <span class="orb-color orb-color--manual"></span>
+      </div>
       </div>
       <div class="hub-sphere-glow" aria-hidden="true"></div>
       <canvas class="hub-sphere-canvas" id="sphereCanvas" aria-hidden="true"></canvas>
@@ -1133,18 +1160,18 @@
             <span class="icon-ring"></span>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5h10M4 12h16M4 16.5h10"/></svg>
           </div>
-          <span class="kicker">Haiku</span>
-          <h2>Interactive Haiku</h2>
+          <span class="kicker">Notice</span>
+          <h2>Notice One Thing</h2>
           <div class="haiku">
-            <span class="haiku-line">It all vanishes</span>
-            <span class="haiku-line">When silence greets mystery</span>
+            <span class="haiku-line">Notice one thing.</span>
+            <span class="haiku-line">You don't need to look for anything.</span>
             <span class="haiku-line haiku-line--input">
-              <input type="text" class="choice-input" id="haikuInput" maxlength="40" autocomplete="off" spellcheck="false" placeholder="…" aria-label="Complete the haiku, forty characters or fewer">
+              <input type="text" class="choice-input" id="haikuInput" maxlength="40" autocomplete="off" spellcheck="false" placeholder="…" aria-label="What did you notice, forty characters or fewer">
             </span>
           </div>
           <div class="choice-actions">
             <span class="choice-counter" id="haikuCounter" aria-hidden="true">40</span>
-            <button type="button" class="choice-submit" id="haikuSubmit" disabled>Submit</button>
+            <button type="button" class="choice-submit" id="haikuSubmit" disabled>Offer it</button>
           </div>
         </div>
         <div class="hub-item play" data-accent="play">
@@ -1152,15 +1179,15 @@
             <span class="icon-ring"></span>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9a3 3 0 115.5 1.7c-1 .9-1.5 1.4-1.5 2.3"/><path d="M12 17h.01"/></svg>
           </div>
-          <span class="kicker">Riddle</span>
-          <h2>Can You Solve the Riddle?</h2>
-          <p class="riddle-text">It is faster than the mind, yet it never moves. The senses can never overtake it, because it's already there at the destination before they even start. What is it?</p>
+          <span class="kicker">Wonder</span>
+          <h2>Something To Wonder About</h2>
+          <p class="riddle-text">What do you hear when everything becomes quiet?</p>
           <div class="choice-input-row">
-            <input type="text" class="choice-input" id="riddleInput" maxlength="60" autocomplete="off" spellcheck="false" placeholder="Your answer…" aria-label="Your answer to the riddle, sixty characters or fewer">
+            <input type="text" class="choice-input" id="riddleInput" maxlength="60" autocomplete="off" spellcheck="false" placeholder="Your answer…" aria-label="Your answer, sixty characters or fewer">
           </div>
           <div class="choice-actions">
             <span class="choice-counter" id="riddleCounter" aria-hidden="true">60</span>
-            <button type="button" class="choice-submit" id="riddleSubmit" disabled>Submit</button>
+            <button type="button" class="choice-submit" id="riddleSubmit" disabled>Keep it</button>
           </div>
         </div>
         <a href="#manual" class="hub-item manual" data-accent="manual">
@@ -1183,7 +1210,7 @@
       <span class="page-footer-dot"></span>
       <span class="page-footer-dot"></span>
     </div>
-    <p class="page-footer-text">Haiku · Riddle · Practice</p>
+    <p class="page-footer-text">Notice · Wonder · Practice</p>
   </footer>
 </main>
 
@@ -1564,6 +1591,19 @@
       manual: { center: [0.9397, 0, -0.3420], color: [225, 58, 65] }
     };
 
+    // tangent basis per region — lets trace anchors be placed as offsets
+    // within each region's own patch of the sphere instead of piling up
+    // on a single point.
+    function tangentBasis(c) {
+      const helper = Math.abs(c[1]) < 0.99 ? [0, 1, 0] : [1, 0, 0];
+      const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+      const norm = (v) => { const l = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]) || 1; return [v[0]/l, v[1]/l, v[2]/l]; };
+      const u = norm(cross(helper, c));
+      const v = norm(cross(c, u));
+      return [u, v];
+    }
+    for (const key in regions) regions[key].tangent = tangentBasis(regions[key].center);
+
     // the passage: elements + palette for what happens if scroll continues
     // past the sphere. AMBER is a fixed soft gold, kept independent of
     // regions.manual's own color — this glow stays gold even as the hub's
@@ -1645,6 +1685,55 @@
       };
     }
     const flowNoise = makeFlowNoise();
+
+    // ── Living composition ───────────────────────────────────────────────
+    // What people leave behind becomes part of the sphere itself.
+    //
+    // Telemetry records the interaction separately: who submitted, what they
+    // submitted, which region it came from, when it happened, and the session
+    // that produced it. The API/database will eventually become the durable
+    // source of this data.
+    //
+    // The visual layer is intentionally independent of that backend. A local
+    // submission immediately becomes a living trace: it enters the sphere,
+    // continues circulating, and remains part of the composition rather than
+    // expiring after a short animation. Later, persisted submissions can be
+    // hydrated into this same collection so the composition can live beyond a
+    // single page session.
+    const traces = [];
+    const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+    const TRACE_SPREAD_RADIUS = 0.5;   // how far anchors range from the region center, in sphere units
+    const TRACE_SPREAD_CAPACITY = 40;  // submissions needed to reach full spread radius
+
+    function addTrace(kind, text) {
+      const key = kind === 'notice' ? 'sanctuary' : 'play';
+      const region = regions[key];
+      const i = region.traceCount = (region.traceCount || 0);
+      region.traceCount++;
+
+      // golden-angle spiral within the region's tangent plane — each new
+      // submission lands in its own spot rather than clustering on one
+      // point, and stays well spread even as the composition grows.
+      const angle = i * GOLDEN_ANGLE;
+      const radius = TRACE_SPREAD_RADIUS * Math.sqrt(Math.min(1, (i + 1) / TRACE_SPREAD_CAPACITY));
+      const [u, v] = region.tangent;
+      const c = region.center;
+      let ax = c[0] + u[0]*radius*Math.cos(angle) + v[0]*radius*Math.sin(angle);
+      let ay = c[1] + u[1]*radius*Math.cos(angle) + v[1]*radius*Math.sin(angle);
+      let az = c[2] + u[2]*radius*Math.cos(angle) + v[2]*radius*Math.sin(angle);
+      const len = Math.sqrt(ax*ax + ay*ay + az*az) || 1;
+      ax /= len; ay /= len; az /= len;
+
+      traces.push({
+        kind,
+        text,
+        born: performance.now(),
+        x: ax, y: ay, z: az,
+        seed: Math.random() * 1000,
+        color: region.color
+      });
+    }
+
     function spawnMote() {
       return {
         x: Math.random() * cssWidth,
@@ -1667,6 +1756,7 @@
       return 'rgba(' + color[0] + ',' + color[1] + ',' + color[2] + ',' + clamp(alpha, 0, 1) + ')';
     }
     function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    function smoothstep(edge0, edge1, x) { const t = clamp((x - edge0) / (edge1 - edge0), 0, 1); return t * t * (3 - 2 * t); }
 
     function rotatePoint(x, y, z, angY, angX) {
       const x1 = x * Math.cos(angY) + z * Math.sin(angY);
@@ -1857,8 +1947,11 @@
     // vibrate/glow now tracks actually answering, not just opening.
     // The submit button locks in the value, fires the log event, and
     // un-locks itself automatically if the visitor edits again.
-    function wireChoiceBox(input, submitBtn, region, maxLen, counterEl, eventType) {
+    function wireChoiceBox(input, submitBtn, region, maxLen, counterEl, eventType, opts) {
       if (!input || !submitBtn) return;
+      const idleLabel = opts.idleLabel;
+      const submittedLabel = opts.submittedLabel;
+      const traceKind = opts.traceKind;
       let submitted = false;
 
       input.addEventListener('focus', () => { engagedRegion = region; });
@@ -1876,7 +1969,7 @@
         submitBtn.disabled = input.value.trim().length === 0;
         if (submitted) {
           submitted = false;
-          submitBtn.textContent = 'Submit';
+          submitBtn.textContent = idleLabel;
           submitBtn.classList.remove('is-submitted');
         }
       });
@@ -1891,9 +1984,11 @@
       submitBtn.addEventListener('click', () => {
         if (submitted || input.value.trim().length === 0) return;
         submitted = true;
-        submitBtn.textContent = 'Saved';
+        const value = input.value.trim();
+        submitBtn.textContent = submittedLabel;
         submitBtn.classList.add('is-submitted');
-        logChoiceEvent(eventType, { value: input.value.trim() });
+        logChoiceEvent(eventType, { value });
+        if (traceKind) addTrace(traceKind, value);
       });
 
       updateCounter();
@@ -1904,14 +1999,16 @@
       document.getElementById('haikuSubmit'),
       'sanctuary', 40,
       document.getElementById('haikuCounter'),
-      'haiku_completed'
+      'haiku_completed',
+      { idleLabel: 'Offer it', submittedLabel: 'You noticed.', traceKind: 'notice' }
     );
     wireChoiceBox(
       document.getElementById('riddleInput'),
       document.getElementById('riddleSubmit'),
       'play', 60,
       document.getElementById('riddleCounter'),
-      'riddle_answered'
+      'riddle_answered',
+      { idleLabel: 'Keep it', submittedLabel: 'Kept.', traceKind: 'wonder' }
     );
 
     function draw(timestamp) {
@@ -2129,6 +2226,60 @@
         ctx.arc(m.x, m.y, m.size * (1 + boost * 0.8), 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // traces — submitted words are now permanent members of the living
+      // composition for this session. They enter the sphere and continue
+      // circulating; they do not expire or fade away. Their age is used only
+      // as a phase for motion, never as a lifetime.
+      for (let i = 0; i < traces.length; i++) {
+        const t = traces[i];
+        const age = timestamp - t.born;
+        const entryT = clamp(age / 900, 0, 1);
+
+        let px = t.x, py = t.y, pz = t.z;
+        let fontSize, alpha;
+
+        if (t.kind === 'notice') {
+          const drift = 0.14;
+          px += Math.sin(age * 0.00035 + t.seed) * drift;
+          py += Math.cos(age * 0.00028 + t.seed * 1.4) * drift * 0.6;
+          pz += Math.sin(age * 0.0003 + t.seed * 0.8) * drift;
+          alpha = 0.78 * smoothstep(0, 1, entryT);
+          fontSize = 13;
+        } else {
+          // Wonder remains quieter and slightly larger, but keeps circulating
+          // instead of completing an animation and disappearing.
+          px += Math.sin(age * 0.00012 + t.seed) * 0.055;
+          py += Math.cos(age * 0.00010 + t.seed * 1.3) * 0.04;
+          pz += Math.sin(age * 0.00011 + t.seed * 0.7) * 0.055;
+          alpha = 0.82 * smoothstep(0, 1, entryT);
+          fontSize = 17;
+        }
+        if (alpha < 0.01) continue;
+
+        const [trx, try_, trz] = rotatePoint(px, py, pz, angY, angX);
+        const scale = CAMERA_D / (CAMERA_D - trz);
+        const screenX = cx + trx * scale * R;
+        const screenY = cy + try_ * scale * R;
+
+        // depth: recede with the sphere's own geometry the same way its
+        // points do, so traces read as part of it rather than a flat
+        // overlay sitting on top regardless of rotation
+        const depthAlpha = mapRange(trz, -1, 1, 0.32, 1);
+        const depthSize = clamp(scale, 0.75, 1.3);
+        alpha *= depthAlpha;
+        fontSize *= depthSize;
+        if (alpha < 0.01) continue;
+
+        ctx.font = 'italic ' + fontSize.toFixed(1) + 'px "Instrument Serif", serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = rgba(t.color, alpha);
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = rgba(t.color, Math.min(0.5, alpha));
+        ctx.fillText(t.text, screenX, screenY);
+      }
+      ctx.shadowBlur = 0;
 
       // the small, faint glow that gathers once the sphere has parted —
       // sized off the sphere's own radius, not the viewport, so it stays
