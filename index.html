@@ -26,8 +26,8 @@
     --text-secondary: #ABA8C2;
     --text-tertiary: #6F6C82;
     --sanctuary: #8C7CF0;
-    --play: #9CAF88;
-    --manual: #E13A41;
+    --play: #EFBB91;
+    --manual: #23B4AF;
   }
 
   * { box-sizing: border-box; }
@@ -63,7 +63,7 @@
     inset: 0;
     background:
       radial-gradient(ellipse 55% 45% at 12% 18%, rgba(140,124,240,0.11) 0%, transparent 70%),
-      radial-gradient(ellipse 50% 40% at 88% 22%, rgba(156,175,136,0.09) 0%, transparent 70%);
+      radial-gradient(ellipse 50% 40% at 88% 22%, rgba(239,187,145,0.09) 0%, transparent 70%);
   }
 
   /* faint texture layer — grain + dot-field, stays viewport-wide over the whole page */
@@ -112,7 +112,7 @@
   .orb--play {
     width: 280px;
     height: 280px;
-    background: rgba(156,175,136,0.12);
+    background: rgba(239,187,145,0.12);
     top: 8%;
     right: -4%;
     animation-delay: -7s;
@@ -140,8 +140,8 @@
   }
 
   .orb-color--sanctuary { background: rgba(140,124,240,0.13); animation-delay: 0s; }
-  .orb-color--play { background: rgba(156,175,136,0.13); animation-delay: -10s; }
-  .orb-color--manual { background: rgba(225,58,65,0.12); animation-delay: -20s; }
+  .orb-color--play { background: rgba(239,187,145,0.13); animation-delay: -10s; }
+  .orb-color--manual { background: rgba(35,180,175,0.12); animation-delay: -20s; }
 
   @keyframes orb-color-cycle {
     0%, 100% { opacity: 0; }
@@ -163,7 +163,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 45% 50% at 50% 50%, rgba(225,58,65,0.08) 0%, transparent 70%);
+    background: radial-gradient(ellipse 45% 50% at 50% 50%, rgba(35,180,175,0.08) 0%, transparent 70%);
   }
 
   @keyframes orb-float {
@@ -569,8 +569,8 @@
     transform: translate(-50%, -50%);
     background:
       radial-gradient(ellipse 55% 60% at 24% 50%, rgba(140,124,240,0.12) 0%, transparent 70%),
-      radial-gradient(ellipse 55% 60% at 50% 50%, rgba(156,175,136,0.11) 0%, transparent 70%),
-      radial-gradient(ellipse 55% 60% at 76% 50%, rgba(225,58,65,0.10) 0%, transparent 70%);
+      radial-gradient(ellipse 55% 60% at 50% 50%, rgba(239,187,145,0.11) 0%, transparent 70%),
+      radial-gradient(ellipse 55% 60% at 76% 50%, rgba(35,180,175,0.10) 0%, transparent 70%);
     filter: blur(26px);
     pointer-events: none;
     animation: sphere-glow-breathe 16s ease-in-out infinite;
@@ -679,8 +679,8 @@
   }
 
   .hub-item.sanctuary::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(140,124,240,0.07) 0%, transparent 70%); }
-  .hub-item.play::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(156,175,136,0.07) 0%, transparent 70%); }
-  .hub-item.manual::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(225,58,65,0.07) 0%, transparent 70%); }
+  .hub-item.play::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(239,187,145,0.07) 0%, transparent 70%); }
+  .hub-item.manual::after { background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(35,180,175,0.07) 0%, transparent 70%); }
 
   .hub-item:hover::before,
   .hub-item:focus-visible::before,
@@ -752,8 +752,8 @@
   }
 
   .hub-item.sanctuary .icon-ring { border-color: rgba(140,124,240,0.18); }
-  .hub-item.play .icon-ring { border-color: rgba(156,175,136,0.18); }
-  .hub-item.manual .icon-ring { border-color: rgba(225,58,65,0.18); }
+  .hub-item.play .icon-ring { border-color: rgba(239,187,145,0.18); }
+  .hub-item.manual .icon-ring { border-color: rgba(35,180,175,0.18); }
 
   .hub-item:hover .icon-ring,
   .hub-item:focus-visible .icon-ring,
@@ -771,15 +771,15 @@
   .hub-item.play:hover .icon-ring,
   .hub-item.play:focus-visible .icon-ring,
   .hub-item.play:focus-within .icon-ring {
-    border-color: rgba(156,175,136,0.45);
-    box-shadow: 0 0 20px rgba(156,175,136,0.12);
+    border-color: rgba(239,187,145,0.45);
+    box-shadow: 0 0 20px rgba(239,187,145,0.12);
   }
 
   .hub-item.manual:hover .icon-ring,
   .hub-item.manual:focus-visible .icon-ring,
   .hub-item.manual:focus-within .icon-ring {
-    border-color: rgba(225,58,65,0.45);
-    box-shadow: 0 0 20px rgba(225,58,65,0.12);
+    border-color: rgba(35,180,175,0.45);
+    box-shadow: 0 0 20px rgba(35,180,175,0.12);
   }
 
   .hub-item .icon {
@@ -1245,8 +1245,8 @@
       smoothing: 0.085,
       colors: {
         sanctuary: [140, 124, 240],
-        play: [156, 175, 136],
-        manual: [225, 58, 65],
+        play: [ 239, 187, 145],
+        manual: [35, 180, 175],
         neutral: [201, 203, 214],
         coreBright: [237, 237, 242]
       }
@@ -1511,7 +1511,7 @@
           if (isBright) {
             rainCtx.fillStyle = `rgba(237,237,242,${0.55 * fade})`;
           } else if (i % 4 === 0) {
-            rainCtx.fillStyle = `rgba(156,175,136,${0.42 * fade})`;
+            rainCtx.fillStyle = `rgba(239,187,145,${0.42 * fade})`;
           } else {
             rainCtx.fillStyle = `rgba(140,124,240,${0.38 * fade})`;
           }
@@ -1587,8 +1587,8 @@
 
     const regions = {
       sanctuary: { center: [-0.9397, 0, -0.3420], color: [140, 124, 240] },
-      play: { center: [0, 0, 1], color: [156, 175, 136] },
-      manual: { center: [0.9397, 0, -0.3420], color: [225, 58, 65] }
+      play: { center: [0, 0, 1], color: [239, 187, 145] },
+      manual: { center: [0.9397, 0, -0.3420], color: [35, 180, 175] }
     };
 
     // tangent basis per region — lets trace anchors be placed as offsets
