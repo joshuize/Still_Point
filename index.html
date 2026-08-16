@@ -1949,6 +1949,33 @@
     // fails quietly and nothing on screen depends on it succeeding.
     const INFRA_LAB_ENDPOINT = 'https://z52curlyc4.execute-api.us-east-2.amazonaws.com/traces';
 
+    // Hydrate the living sphere with contributions already persisted in DynamoDB.
+    // Read failure stays silent so the artwork never depends on infrastructure.
+    async function hydrateTraces() {
+      try {
+        const response = await fetch(INFRA_LAB_ENDPOINT, { method: 'GET' });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!Array.isArray(data.traces)) return;
+
+        data.traces
+          .filter((trace) => typeof trace.value === 'string' && trace.value.trim())
+          .sort((a, b) => String(a.timestamp || '').localeCompare(String(b.timestamp || '')))
+          .forEach((trace) => {
+            if (trace.event === 'observation_offered') {
+              addTrace('notice', trace.value.trim());
+            } else if (trace.event === 'offering_kept') {
+              addTrace('wonder', trace.value.trim());
+            }
+          });
+      } catch (_) {
+        // Offline, API unavailable, or read path not reachable — keep the experience intact.
+      }
+    }
+
+    hydrateTraces();
+
     function logChoiceEvent(eventType, payload) {
       const body = JSON.stringify({
         event: eventType,
